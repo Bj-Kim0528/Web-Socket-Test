@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>CableApp</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+
+    <%= stylesheet_link_tag 'application', media: 'all', 'data-turbolinks-track': 'reload' %>
+    <%= javascript_pack_tag 'application', 'data-turbolinks-track': 'reload' %>
+  </head>
+
+  <body>
+  </br>
+  <% if user_signed_in? %>
+
+    <%= link_to root_path do %>
+      <i></i> Top
+    <% end %>
+
+    <%= link_to home_path do %>
+      <i></i> Chat
+    <% end %>
+
+    <%= link_to destroy_user_session_path, method: :delete do %>
+      <i class="fas fa-sign-out-alt"></i> Log out
+    <% end %>
+
+  <% else %>
+
+    <%= link_to root_path do %>
+      <i></i> Top
+    <% end %>
+
+    <%= link_to new_user_registration_path do %>
+      <i></i> Sign up
+    <% end %>
+
+
+    <%= link_to new_user_session_path do %>
+      <i></i> Log in
+    <% end %>
+  <% end %>
+
+    <%= yield %>
+  </body>
+</html>

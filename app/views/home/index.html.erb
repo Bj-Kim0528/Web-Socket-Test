@@ -1,0 +1,82 @@
+<!-- app/views/home/index.html.erb -->
+<h1>채팅방</h1>
+
+<% if current_user %>
+  <p><strong><%= current_user.email %></strong> 님, 온라인입니다.</p>
+<% else %>
+  <p>로그인 해주세요.</p>
+<% end %>
+
+<div style="display: flex; margin-top: 20px;">
+  <!-- 온라인 사용자 목록 영역 -->
+  <div style="width: 25%; border-right: 1px solid #ccc; padding: 10px;">
+    <h2>온라인 사용자</h2>
+    <ul id="online-users">
+      <!-- PresenceChannel를 통해 실시간으로 업데이트 됩니다. -->
+    </ul>
+  </div>
+
+  <!-- 채팅 메시지 영역 -->
+  <div style="width: 75%; padding: 10px;">
+    <div id="messages" style="border:1px solid #ccc; padding:10px; height:300px; overflow:auto;">
+      <!-- 채팅 메시지가 이곳에 표시됩니다. -->
+    </div>
+
+    <form id="message_form" style="margin-top: 10px;">
+      <input type="text" id="message_input" placeholder="메시지를 입력하세요" style="width:80%;">
+      <button type="submit">전송</button>
+    </form>
+  </div>
+</div>
+
+<!-- 채팅 메시지 전송 관련 JavaScript -->
+<script>
+  document.addEventListener("turbolinks:load", () => {
+    console.log("turbolinks:load 이벤트 발생 - 채팅 및 온라인 상태 업데이트 페이지 로드 완료");
+
+    // 채팅 메시지 전송 처리
+    const form = document.getElementById("message_form");
+    const input = document.getElementById("message_input");
+    if (window.chatChannel) {
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const message = input.value;
+        if (message.trim() === "") return;
+        window.chatChannel.speak(message);
+        input.value = "";
+      });
+    } else {
+      console.error("chatChannel 객체를 찾을 수 없습니다.");
+    }
+  });
+</script>
+
+<!-- 온라인 사용자 업데이트 예시 (PresenceChannel의 이벤트 처리 예시)
+     이 코드는 presence_channel.js에서 별도로 구현해도 되고,
+     여기서 간단하게 온라인 사용자 목록을 갱신하는 예시로 사용할 수 있습니다.
+     (실제 구현 시에는 온라인 사용자 목록을 관리하는 로직이 필요합니다.)
+-->
+<script>
+  // 만약 window.presenceChannel이 전역으로 할당되어 있다면, received 콜백을 다음과 같이 재정의할 수 있습니다.
+  if (window.presenceChannel) {
+    // 기존 received 콜백 대신 아래 코드를 사용할 수 있습니다.
+    window.presenceChannel.received = function(data) {
+      console.log("Presence update:", data);
+      const onlineUsersEl = document.getElementById("online-users");
+      if (data.status === "online") {
+        // 이미 목록에 존재하는지 확인 (유저의 이메일을 ID로 사용)
+        if (!document.getElementById("user-" + data.user)) {
+          const li = document.createElement("li");
+          li.textContent = data.user;
+          li.id = "user-" + data.user; // 예를 들어, 이메일을 유니크한 ID로 사용
+          onlineUsersEl.appendChild(li);
+        }
+      } else if (data.status === "offline") {
+        const userEl = document.getElementById("user-" + data.user);
+        if (userEl) {
+          userEl.remove();
+        }
+      }
+    };
+  }
+</script>
