@@ -11,36 +11,22 @@ const presenceChannel = consumer.subscriptions.create("PresenceChannel", {
 
   received(data) {
     if (data.type === "full_update") {
-      // 전체 온라인 사용자 목록을 새로 구성
+      // 전체 온라인 사용자 목록을 새로 구성합니다.
       const onlineUsersEl = document.getElementById("online-users");
-      onlineUsersEl.innerHTML = ""; // 기존 목록 초기화
-      data.users.forEach(user => {
-        if (!document.getElementById("user-" + user)) {
+      if (onlineUsersEl) {
+        onlineUsersEl.innerHTML = ""; // 기존 목록 초기화
+        data.users.forEach(user => {
           const li = document.createElement("li");
           li.textContent = user;
-          li.id = "user-" + user;
+          li.id = "user-" + user; // 예: "user-1@1"
           onlineUsersEl.appendChild(li);
-        }
-      });
-    } else if (data.type === "update") {
-      // 개별 업데이트 처리 (앞서 구현한 코드와 동일)
-      const onlineUsersEl = document.getElementById("online-users");
-      if (data.status === "online") {
-        if (!document.getElementById("user-" + data.user)) {
-          const li = document.createElement("li");
-          li.textContent = data.user;
-          li.id = "user-" + data.user;
-          onlineUsersEl.appendChild(li);
-        }
-      } else if (data.status === "offline") {
-        const userEl = document.getElementById("user-" + data.user);
-        if (userEl) {
-          userEl.remove();
-        }
+        });
+      } else {
+        console.error("online-users 요소를 찾을 수 없습니다.");
       }
     }
-  }  
+    // 필요하다면 개별 업데이트(update) 처리 로직도 추가할 수 있습니다.
+  }
 });
 
 export default presenceChannel;
-

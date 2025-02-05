@@ -22,8 +22,8 @@
       <i></i> Chat
     <% end %>
 
-    <%= link_to destroy_user_session_path, method: :delete do %>
-      <i class="fas fa-sign-out-alt"></i> Log out
+    <% if current_user %>
+      <a href="<%= destroy_user_session_path %>" data-method="delete" id="logout-button">로그아웃</a>
     <% end %>
 
   <% else %>

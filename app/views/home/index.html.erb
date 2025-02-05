@@ -12,7 +12,7 @@
   <div style="width: 25%; border-right: 1px solid #ccc; padding: 10px;">
     <h2>온라인 사용자</h2>
     <ul id="online-users">
-      <!-- PresenceChannel를 통해 실시간으로 업데이트 됩니다. -->
+      <!-- 서버에서 full_update 메시지 수신 시 목록이 여기 구성됩니다. -->
     </ul>
   </div>
 
@@ -31,44 +31,51 @@
 
 <!-- 채팅 메시지 전송 관련 JavaScript -->
 <script>
-  document.addEventListener("turbolinks:load", () => {
-    console.log("turbolinks:load 이벤트 발생 - 채팅 및 온라인 상태 업데이트 페이지 로드 완료");
+document.addEventListener("turbolinks:load", () => {
+  console.log("turbolinks:load 이벤트 발생 - 채팅 및 온라인 상태 업데이트 페이지 로드 완료");
 
-    // 채팅 메시지 전송 처리
-    const form = document.getElementById("message_form");
-    const input = document.getElementById("message_input");
-    if (window.chatChannel) {
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        const message = input.value;
-        if (message.trim() === "") return;
-        window.chatChannel.speak(message);
-        input.value = "";
-      });
-    } else {
-      console.error("chatChannel 객체를 찾을 수 없습니다.");
-    }
-  });
+  // 채팅 메시지 전송 처리
+  const form = document.getElementById("message_form");
+  const input = document.getElementById("message_input");
+  if (form && input && window.chatChannel) {
+    form.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const message = input.value;
+      if (message.trim() === "") return;
+      window.chatChannel.speak(message);
+      input.value = "";
+    });
+  } else {
+    console.error("chatChannel 객체를 찾을 수 없거나, 메시지 폼/입력 요소가 존재하지 않습니다.");
+  }
+});
 </script>
 
-<!-- 온라인 사용자 업데이트 예시 (PresenceChannel의 이벤트 처리 예시)
-     이 코드는 presence_channel.js에서 별도로 구현해도 되고,
-     여기서 간단하게 온라인 사용자 목록을 갱신하는 예시로 사용할 수 있습니다.
-     (실제 구현 시에는 온라인 사용자 목록을 관리하는 로직이 필요합니다.)
--->
+<!-- 온라인 사용자 업데이트 관련 JavaScript (PresenceChannel full_update 및 개별 업데이트 처리) -->
 <script>
-  // 만약 window.presenceChannel이 전역으로 할당되어 있다면, received 콜백을 다음과 같이 재정의할 수 있습니다.
-  if (window.presenceChannel) {
-    // 기존 received 콜백 대신 아래 코드를 사용할 수 있습니다.
-    window.presenceChannel.received = function(data) {
-      console.log("Presence update:", data);
-      const onlineUsersEl = document.getElementById("online-users");
+if (window.presenceChannel) {
+  window.presenceChannel.received = function(data) {
+    console.log("Presence update:", data);
+    const onlineUsersEl = document.getElementById("online-users");
+    if (!onlineUsersEl) {
+      console.error("online-users 요소를 찾을 수 없습니다.");
+      return;
+    }
+    if (data.type === "full_update") {
+      // 전체 온라인 사용자 목록을 새로 구성
+      onlineUsersEl.innerHTML = "";
+      data.users.forEach(user => {
+        const li = document.createElement("li");
+        li.textContent = user;
+        li.id = "user-" + user; // 예: "user-1@1"
+        onlineUsersEl.appendChild(li);
+      });
+    } else if (data.type === "update") {
       if (data.status === "online") {
-        // 이미 목록에 존재하는지 확인 (유저의 이메일을 ID로 사용)
         if (!document.getElementById("user-" + data.user)) {
           const li = document.createElement("li");
           li.textContent = data.user;
-          li.id = "user-" + data.user; // 예를 들어, 이메일을 유니크한 ID로 사용
+          li.id = "user-" + data.user;
           onlineUsersEl.appendChild(li);
         }
       } else if (data.status === "offline") {
@@ -77,6 +84,7 @@
           userEl.remove();
         }
       }
-    };
-  }
+    }
+  };
+}
 </script>
